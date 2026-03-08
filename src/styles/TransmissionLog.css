@@ -1,0 +1,104 @@
+.transmission-log {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 20px;
+}
+
+.log-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.log-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.logs-container {
+  max-height: 300px;
+  overflow-y: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.log-empty {
+  text-align: center;
+  color: var(--text-muted);
+  padding: 20px;
+  margin: 0;
+  font-style: italic;
+}
+
+.log-entry {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 12px;
+  background-color: var(--bg-primary);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  border-left: 4px solid var(--border);
+}
+
+.log-entry.log-success {
+  border-left-color: var(--success);
+}
+
+.log-entry.log-failed {
+  border-left-color: var(--danger);
+}
+
+.log-time {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--text-muted);
+  min-width: 80px;
+}
+
+.log-channel {
+  flex: 1;
+  font-size: 13px;
+  color: var(--text-primary);
+}
+
+.log-status {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.log-status.success {
+  color: var(--success);
+}
+
+.log-status.failed {
+  color: var(--danger);
+}
+
+@media (max-width: 768px) {
+  .transmission-log {
+    padding: 16px;
+  }
+
+  .log-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .log-entry {
+    font-size: 12px;
+  }
+
+  .log-time {
+    min-width: 60px;
+    font-size: 11px;
+  }
+
+  .logs-container {
+    max-height: 200px;
+  }
+}

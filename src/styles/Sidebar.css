@@ -1,0 +1,100 @@
+.sidebar {
+  width: 250px;
+  background-color: var(--bg-surface);
+  border-right: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  max-height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-header {
+  padding: 20px 16px;
+  border-bottom: 1px solid var(--border);
+}
+
+.sidebar-header h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.servers-list {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.server-item {
+  display: flex;
+  align-items: center;
+  background-color: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  transition: background-color 0.2s ease;
+}
+
+.server-item.active {
+  background-color: var(--border);
+}
+
+.server-btn {
+  flex: 1;
+  background: none;
+  border: none;
+  color: var(--text-primary);
+  padding: 12px 16px;
+  text-align: left;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  font-family: var(--font-main);
+  font-size: 14px;
+  transition: color 0.2s ease;
+}
+
+.server-btn:hover {
+  color: var(--accent);
+}
+
+.server-icon {
+  width: 24px;
+  height: 24px;
+  border-radius: 4px;
+  object-fit: cover;
+}
+
+.btn-delete {
+  padding: 8px;
+  background: none;
+  border: none;
+  color: var(--text-muted);
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.2s ease;
+  margin-right: 8px;
+}
+
+.btn-delete:hover {
+  color: var(--danger);
+}
+
+.sidebar .btn-primary {
+  margin: 16px;
+}
+
+@media (max-width: 768px) {
+  .sidebar {
+    width: 60px;
+  }
+
+  .sidebar-header h2,
+  .server-btn span {
+    display: none;
+  }
+
+  .server-icon {
+    width: 32px;
+    height: 32px;
+  }
+}

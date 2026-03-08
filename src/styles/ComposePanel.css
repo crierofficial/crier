@@ -1,0 +1,65 @@
+.compose-panel {
+  background-color: var(--bg-surface);
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  padding: 20px;
+  margin-bottom: 20px;
+}
+
+.compose-panel h2 {
+  margin-bottom: 20px;
+  font-size: 20px;
+}
+
+.compose-panel .form-group {
+  margin-bottom: 16px;
+}
+
+.compose-panel textarea {
+  resize: vertical;
+  min-height: 120px;
+}
+
+.compose-panel input,
+.compose-panel textarea {
+  width: 100%;
+}
+
+.btn-broadcast {
+  width: 100%;
+  padding: 12px;
+  margin-top: 8px;
+  justify-content: center;
+  font-size: 16px;
+}
+
+.add-channel-form {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--border);
+}
+
+.add-channel-form .input-inline {
+  margin-bottom: 0;
+}
+
+.add-channel-form button {
+  margin-top: 4px;
+}
+
+@media (max-width: 768px) {
+  .compose-panel {
+    padding: 16px;
+  }
+
+  .compose-panel h2 {
+    font-size: 16px;
+  }
+
+  .compose-panel textarea {
+    min-height: 100px;
+  }
+}
