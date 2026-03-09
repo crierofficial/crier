@@ -23,18 +23,16 @@ const CrierLogo = () => (
     <path d="M 171,72 Q 188,86 171,100 Q 154,114 171,128" fill="none" stroke="url(#scyan)" strokeWidth="2" strokeLinecap="round" opacity="0.4" />
     <circle cx="152" cy="100" r="5" fill="#00d4ff" opacity="0.9" />
   </svg>
-)
+);
 
 const SERVER_TABS = [
-  { id: 'compose', emoji: '📡', label: 'COMPOSE' },
-  { id: 'schedule', emoji: '⏰', label: 'SCHEDULE' },
-  { id: 'templates', emoji: '📋', label: 'TEMPLATES' },
-  { id: 'settings', emoji: '⚙️', label: 'SETTINGS' },
+  { id: 'compose', emoji: '\ud83d\udce1', label: 'COMPOSE' },
+  { id: 'templates', emoji: '\ud83d\udccb', label: 'TEMPLATES' },
+  { id: 'settings', emoji: '\u2699\ufe0f', label: 'SETTINGS' },
 ];
 
 export default function Sidebar({ user, activeTab, setActiveTab, activePage, setActivePage }) {
-  const { servers, selectedServerId, setSelectedServer, removeServer, loadServers } =
-    useStore();
+  const { servers, selectedServerId, setSelectedServer, removeServer, loadServers } = useStore();
   const [showModal, setShowModal] = useState(false);
   const [time, setTime] = useState(new Date());
 
@@ -58,7 +56,7 @@ export default function Sidebar({ user, activeTab, setActiveTab, activePage, set
       hour: '2-digit',
       minute: '2-digit',
       second: '2-digit',
-      hour12: false
+      hour12: false,
     });
   };
 
@@ -98,9 +96,7 @@ export default function Sidebar({ user, activeTab, setActiveTab, activePage, set
           const isSelected = selectedServerId === server.id && activePage === 'dashboard';
           return (
             <div key={server.id}>
-              <div
-                className={`server-item ${isSelected ? 'active' : ''}`}
-              >
+              <div className={`server-item ${isSelected ? 'active' : ''}`}>
                 <button
                   className="server-btn"
                   onClick={() => handleServerClick(server.id)}
@@ -121,10 +117,9 @@ export default function Sidebar({ user, activeTab, setActiveTab, activePage, set
                 </button>
               </div>
 
-              {/* Tab navigation — only show for selected server */}
               {isSelected && (
                 <div className="server-tabs">
-                  {SERVER_TABS.map(tab => (
+                  {SERVER_TABS.map((tab) => (
                     <button
                       key={tab.id}
                       className={`server-tab-btn${activeTab === tab.id ? ' active' : ''}`}
@@ -141,20 +136,19 @@ export default function Sidebar({ user, activeTab, setActiveTab, activePage, set
         })}
       </div>
 
-      {/* Global navigation items */}
       <div className="global-nav">
         <button
           className={`global-nav-btn${activePage === 'analytics' ? ' active' : ''}`}
           onClick={() => handlePageNav('analytics')}
         >
-          <span className="tab-emoji">📊</span>
+          <span className="tab-emoji">{'\ud83d\udcca'}</span>
           <span className="tab-label">ANALYTICS</span>
         </button>
         <button
           className={`global-nav-btn${activePage === 'logs' ? ' active' : ''}`}
           onClick={() => handlePageNav('logs')}
         >
-          <span className="tab-emoji">📜</span>
+          <span className="tab-emoji">{'\ud83d\udcdc'}</span>
           <span className="tab-label">LOGS</span>
         </button>
       </div>

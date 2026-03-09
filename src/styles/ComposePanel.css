@@ -1,232 +1,4 @@
-/* ── Discord message preview ── */
-.discord-preview-label-strict {
-  font-family: 'Share Tech Mono', monospace;
-  font-size: 9px;
-  color: var(--gold);
-  letter-spacing: 2px;
-  margin-bottom: 8px;
-  border-left: 3px solid var(--gold);
-  padding-left: 8px;
-  font-weight: 700;
-}
-
-.discord-date-separator {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  margin: 0 0 8px 0;
-  user-select: none;
-}
-
-.discord-date-line {
-  flex: 1;
-  height: 1px;
-  background: #35373c;
-  margin: 0 8px;
-  border-radius: 1px;
-}
-
-.discord-date-text {
-  color: #949ba4;
-  font-size: 12px;
-  font-family: 'gg sans', 'Noto Sans', 'Whitney', sans-serif;
-  font-weight: 400;
-  letter-spacing: 0.2px;
-}
-
-.discord-message-preview {
-  position: relative;
-  background: #313338;
-  border-radius: 8px;
-  padding: 16px 16px 16px 72px;
-  min-height: 56px;
-  margin-bottom: 12px;
-  transition: background 0.15s;
-}
-
-.discord-message-preview:hover {
-  background: rgba(4, 4, 5, 0.07);
-}
-
-.discord-avatar {
-  position: absolute;
-  left: 16px;
-  top: 8px;
-  width: 40px;
-  height: 40px;
-  border-radius: 50%;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 20px;
-  color: #060809;
-  overflow: hidden;
-  background: linear-gradient(135deg, #c8a55a, #00d4ff);
-}
-
-.discord-message-content {
-  display: flex;
-  flex-direction: column;
-}
-
-.discord-username {
-  color: #fff;
-  font-weight: 600;
-  font-size: 16px;
-  font-family: 'gg sans', 'Noto Sans', 'Whitney', sans-serif;
-}
-
-.discord-timestamp {
-  color: #949ba4;
-  font-size: 12px;
-  font-family: 'gg sans', 'Noto Sans', 'Whitney', sans-serif;
-  font-weight: 400;
-  margin-left: 8px;
-}
-
-.discord-message-text {
-  color: #dcddde;
-  font-size: 16px;
-  line-height: 1.375;
-  font-family: 'gg sans', 'Noto Sans', 'Whitney', sans-serif;
-  margin-top: 2px;
-  margin-bottom: 0;
-  word-break: break-word;
-}
-
-.discord-spoiler {
-  background: #2d2f32;
-  color: #2d2f32;
-  border-radius: 3px;
-  transition: color 0.2s;
-  cursor: pointer;
-}
-
-.discord-spoiler:hover {
-  color: #fff;
-}
-
-.discord-mention {
-  background: rgba(88, 101, 242, 0.3);
-  color: #c9cdfb;
-  border-radius: 3px;
-  padding: 0 2px;
-  font-weight: 500;
-}
-
-.discord-channel {
-  color: #00a8fc;
-  cursor: pointer;
-}
-
-.discord-link {
-  color: #00a8fc;
-  text-decoration: none;
-}
-
-.discord-link:hover {
-  text-decoration: underline;
-}
-
-.discord-codeblock {
-  background: #2b2d31;
-  padding: 8px 12px;
-  border-radius: 4px;
-  margin: 4px 0;
-  font-family: Consolas, monospace;
-  font-size: 14px;
-  color: #dcddde;
-  overflow-x: auto;
-  display: block;
-}
-
-.discord-inline-code {
-  background: #2d2f32;
-  padding: 2px 4px;
-  border-radius: 3px;
-  font-family: Consolas, monospace;
-  font-size: 85%;
-  color: #dcddde;
-}
-
-.discord-spoiler {
-  background: #2d2f32;
-  color: #2d2f32;
-  border-radius: 3px;
-  padding: 0 2px;
-  cursor: pointer;
-  transition: color 0.2s;
-}
-
-.discord-spoiler:hover {
-  color: #dcddde;
-}
-
-.discord-quote {
-  border-left: 4px solid #4e5058;
-  padding-left: 12px;
-  margin: 4px 0;
-  color: #dcddde;
-}
-
-.discord-mention {
-  background: rgba(88, 101, 242, 0.3);
-  color: #c9cdfb;
-  border-radius: 3px;
-  padding: 0 2px;
-}
-
-.discord-channel {
-  color: #00a8fc;
-  cursor: pointer;
-}
-
-.discord-embed-preview {
-  background: #2b2d31;
-  border-radius: 4px;
-  padding: 12px 16px;
-  margin-top: 12px;
-  border-left: 4px solid var(--gold);
-  box-shadow: 0 2px 8px 0 rgba(0, 0, 0, 0.10);
-}
-
-.discord-embed-title {
-  color: #fff;
-  font-weight: 600;
-  font-size: 15px;
-  font-family: 'gg sans', 'Noto Sans', 'Whitney', sans-serif;
-}
-
-.discord-embed-description {
-  color: #dcddde;
-  font-size: 14px;
-  margin-top: 4px;
-  font-family: 'gg sans', 'Noto Sans', 'Whitney', sans-serif;
-}
-
-.discord-embed-image {
-  max-width: 100%;
-  border-radius: 4px;
-  margin-top: 8px;
-  display: block;
-}
-
-.discord-embed-footer {
-  color: #949ba4;
-  font-size: 12px;
-  margin-top: 8px;
-  border-top: 1px solid rgba(255, 255, 255, 0.06);
-  padding-top: 8px;
-  font-family: 'gg sans', 'Noto Sans', 'Whitney', sans-serif;
-}
-
-.preview-empty {
-  color: #4a5568;
-  font-style: italic;
-}
-
-/* ── Compose Panel ── */
+/* Compose Panel */
 .compose-panel {
   background: rgba(6, 8, 9, 0.85);
   border: 1px solid var(--border);
@@ -247,7 +19,6 @@
   background: linear-gradient(135deg, var(--gold) 0%, transparent 100%);
 }
 
-/* Header row with embed toggle */
 .compose-header-row {
   display: flex;
   align-items: center;
@@ -293,38 +64,18 @@
   box-shadow: 0 0 8px var(--gold-glow);
 }
 
-/* ── Two-column grid ── */
-.compose-grid {
-  display: grid;
-  grid-template-columns: 55fr 45fr;
-  gap: 24px;
-  align-items: start;
-}
-
 .compose-left {
   display: flex;
   flex-direction: column;
   min-width: 0;
 }
 
-.compose-right {
-  position: sticky;
-  top: 20px;
-  align-self: start;
-  background: rgba(10, 14, 18, 0.6);
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  padding: 16px;
-}
-
-/* Message textarea — taller */
 .message-textarea {
   resize: vertical;
   min-height: 160px !important;
   clip-path: polygon(0 0, calc(100% - 3px) 0, 100% 3px, 100% 100%, 0 100%);
 }
 
-/* Embed fields section */
 .embed-fields {
   background: rgba(30, 33, 36, 0.7);
   border-radius: 4px;
@@ -333,7 +84,6 @@
   margin-bottom: 18px;
 }
 
-/* Channel chips */
 .channels-list {
   display: flex;
   flex-wrap: wrap;
@@ -349,7 +99,6 @@
   padding: 8px 0;
 }
 
-/* Form inputs */
 .compose-left .form-group {
   margin-bottom: 16px;
 }
@@ -367,7 +116,6 @@
   box-shadow: 0 0 12px rgba(200, 165, 90, 0.3);
 }
 
-/* Broadcast button row */
 .broadcast-btn-row {
   display: flex;
   gap: 8px;
@@ -437,7 +185,6 @@
   cursor: not-allowed;
 }
 
-/* Chips */
 .chip {
   display: inline-block;
   padding: 6px 12px;
@@ -466,14 +213,96 @@
   padding: 5px 11px;
 }
 
-@media (max-width: 1024px) {
-  .compose-grid {
-    grid-template-columns: 1fr;
-  }
+.broadcast-status {
+  margin-top: 10px;
+  font-family: 'Share Tech Mono', monospace;
+  color: var(--gold2);
+  font-size: 12px;
+}
 
-  .compose-right {
-    position: static;
-  }
+.scheduled-section {
+  margin-top: 20px;
+  border-top: 1px solid rgba(200, 165, 90, 0.2);
+  padding-top: 16px;
+}
+
+.scheduled-toggle-btn {
+  width: 100%;
+  text-align: left;
+  font-family: 'Orbitron', sans-serif;
+  font-size: 11px;
+  letter-spacing: 2px;
+  color: var(--gold);
+  background: rgba(15, 21, 32, 0.75);
+  border: 1px solid var(--border);
+  padding: 10px 12px;
+  cursor: pointer;
+}
+
+.scheduled-list {
+  margin-top: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.scheduled-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 10px;
+  border: 1px solid rgba(200, 165, 90, 0.2);
+  background: rgba(10, 14, 18, 0.75);
+  padding: 10px;
+}
+
+.scheduled-info {
+  min-width: 0;
+}
+
+.scheduled-time {
+  margin: 0 0 6px;
+  font-family: 'Share Tech Mono', monospace;
+  font-size: 11px;
+  color: var(--gold2);
+}
+
+.scheduled-preview {
+  margin: 0;
+  color: var(--text);
+  font-size: 13px;
+  word-break: break-word;
+}
+
+.scheduled-actions {
+  display: flex;
+  gap: 6px;
+}
+
+.scheduled-edit-btn,
+.scheduled-delete-btn {
+  font-family: 'Orbitron', sans-serif;
+  font-size: 10px;
+  letter-spacing: 1px;
+  padding: 8px 10px;
+  background: transparent;
+  cursor: pointer;
+}
+
+.scheduled-edit-btn {
+  color: var(--gold);
+  border: 1px solid rgba(200, 165, 90, 0.5);
+}
+
+.scheduled-delete-btn {
+  color: #ff6b6b;
+  border: 1px solid rgba(255, 107, 107, 0.65);
+}
+
+.scheduled-empty {
+  color: var(--muted);
+  font-style: italic;
+  margin: 0;
 }
 
 @media (max-width: 768px) {
@@ -487,5 +316,9 @@
 
   .message-textarea {
     min-height: 100px !important;
+  }
+
+  .broadcast-btn-row {
+    flex-direction: column;
   }
 }

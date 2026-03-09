@@ -4,7 +4,6 @@ import Sidebar from '../components/Sidebar';
 import ComposePanel from '../components/ComposePanel';
 import TemplatesPanel from '../components/TemplatesPanel';
 import ChannelManager from '../components/ChannelManager';
-import SchedulePanel from '../components/SchedulePanel';
 import TransmissionLog from '../components/TransmissionLog';
 import AnalyticsPanel from '../components/AnalyticsPanel';
 import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../hooks/useKeyboardShortcuts.jsx'
@@ -75,11 +74,7 @@ export default function Dashboard({ user }) {
             senderInputRef={senderInputRef}
             messageInputRef={messageInputRef}
             broadcastBtnRef={broadcastBtnRef}
-            setActiveTab={setActiveTab}
           />
-        )}
-        {activeTab === 'schedule' && (
-          <SchedulePanel serverId={selectedServerId} />
         )}
         {activeTab === 'templates' && (
           <TemplatesPanel ref={templatesPanelRef} />

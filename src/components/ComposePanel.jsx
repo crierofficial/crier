@@ -1,116 +1,67 @@
-
-import { useState, forwardRef, useEffect } from 'react';
+import { useState, forwardRef, useEffect, useMemo } from 'react';
 import { useStore } from '../store/useStore';
 import { Send } from 'lucide-react';
+import ScheduleModal from './ScheduleModal';
 import '../styles/ComposePanel.css';
-
-// Discord Markdown Parser
-function parseDiscordMarkdown(text) {
-  if (!text) return '';
-  let html = text
-    .replace(/&/g, '&amp;')
-    .replace(/</g, '&lt;')
-    .replace(/>/g, '&gt;')
-    .replace(/```([\s\S]*?)```/g, '<pre class="discord-codeblock"><code>$1</code></pre>')
-    .replace(/`([^`]+)`/g, '<code class="discord-inline-code">$1</code>')
-    .replace(/\*\*(.+?)\*\*/g, '<strong>$1</strong>')
-    .replace(/\*(.+?)\*/g, '<em>$1</em>')
-    .replace(/_(.+?)_/g, '<em>$1</em>')
-    .replace(/__(.+?)__/g, '<u>$1</u>')
-    .replace(/~~(.+?)~~/g, '<s>$1</s>')
-    .replace(/\|\|(.+?)\|\|/g, '<span class="discord-spoiler">$1</span>')
-    .replace(/^&gt; (.+)/gm, '<div class="discord-quote">$1</div>')
-    .replace(/@everyone|@here/g, '<span class="discord-mention">$&</span>')
-    .replace(/@(\w+)/g, '<span class="discord-mention">@$1</span>')
-    .replace(/#(\w+)/g, '<span class="discord-channel">#$1</span>')
-    .replace(/(https?:\/\/[^\s]+)/g, '<a class="discord-link" href="$1" target="_blank" rel="noopener noreferrer">$1</a>')
-    .replace(/\n/g, '<br/>');
-  return html;
-}
-
-function DiscordPreview({ senderName, avatarUrl, message, embed }) {
-  if (!senderName && !message && !embed) return null;
-  const now = new Date();
-  const time = `Today at ${now.getHours().toString().padStart(2, '0')}:${now.getMinutes().toString().padStart(2, '0')}`;
-  const dateString = 'March 9, 2026';
-  return (
-    <div>
-      <div className="discord-preview-label-strict">DISCORD PREVIEW</div>
-      <div className="discord-date-separator">
-        <span className="discord-date-line" />
-        <span className="discord-date-text">{dateString}</span>
-        <span className="discord-date-line" />
-      </div>
-      <div className="discord-message-preview">
-        <div className="discord-avatar" style={{ background: avatarUrl ? 'none' : 'linear-gradient(135deg,#c8a55a,#00d4ff)' }}>
-          {avatarUrl
-            ? <img src={avatarUrl} alt="avatar" style={{ width: 40, height: 40, borderRadius: '50%', objectFit: 'cover' }} />
-            : (senderName?.[0]?.toUpperCase() || '?')}
-        </div>
-        <div className="discord-message-content">
-          <span className="discord-username">{senderName || <span className="preview-empty">No sender</span>}</span>
-          <span className="discord-timestamp">{time}</span>
-          <div
-            className="discord-message-text"
-            dangerouslySetInnerHTML={{ __html: message ? parseDiscordMarkdown(message) : '<span class="preview-empty" style="color:#4a5568;font-style:italic">No message</span>' }}
-          />
-          {embed && (embed.title || embed.description || embed.image || embed.footer) && (
-            <div className="discord-embed-preview" style={{ borderLeft: `4px solid ${embed.color || '#c8a55a'}` }}>
-              {embed.title && <div className="discord-embed-title">{embed.title}</div>}
-              {embed.description && <div className="discord-embed-description">{embed.description}</div>}
-              {embed.image && (
-                <img src={embed.image} alt="embed" className="discord-embed-image" />
-              )}
-              {embed.footer && <div className="discord-embed-footer">{embed.footer}</div>}
-            </div>
-          )}
-        </div>
-      </div>
-    </div>
-  );
-}
-
 
 export default forwardRef(function ComposePanel({
   serverId,
   senderInputRef,
   messageInputRef,
   broadcastBtnRef,
-  setActiveTab,
 }, ref) {
   const {
     servers,
     addLog,
-    addChannel,
     setCurrentCompose,
     setComposeFields,
+    scheduled,
+    loadScheduled,
+    removeScheduled,
+    addScheduled,
+    updateScheduled,
     templateSenderName,
     templateAvatarUrl,
     templateMessage,
     templateSelectedChannels,
+    templates,
+    fetchTemplates,
+    loadTemplate,
   } = useStore();
 
-  // Local state for runtime changes
   const [senderName, setSenderName] = useState(templateSenderName);
   const [avatarUrl, setAvatarUrl] = useState(templateAvatarUrl);
   const [message, setMessage] = useState(templateMessage);
   const [selectedChannels, setSelectedChannels] = useState(templateSelectedChannels);
   const [sending, setSending] = useState(false);
-  // Embed state
+
   const [embedActive, setEmbedActive] = useState(false);
   const [embedColor, setEmbedColor] = useState('#c8a55a');
   const [embedTitle, setEmbedTitle] = useState('');
   const [embedDescription, setEmbedDescription] = useState('');
   const [embedImageUrl, setEmbedImageUrl] = useState('');
-  const [embedFooter, setEmbedFooter] = useState('Crier — Free Discord Broadcast Tool');
-  // Broadcast to all state
+  const [embedFooter, setEmbedFooter] = useState('Crier - Free Discord Broadcast Tool');
+
   const [isBroadcasting, setIsBroadcasting] = useState(false);
   const [broadcastProgress, setBroadcastProgress] = useState('');
   const [broadcastResult, setBroadcastResult] = useState('');
 
+  const [isScheduleModalOpen, setIsScheduleModalOpen] = useState(false);
+  const [isScheduledExpanded, setIsScheduledExpanded] = useState(false);
+  const [isTemplatesExpanded, setIsTemplatesExpanded] = useState(false);
+  const [editingItem, setEditingItem] = useState(null);
+
   const server = servers.find((s) => s.id === serverId);
 
-  // Update handlers that sync to store
+  const filteredScheduled = useMemo(() => {
+    if (!server) return [];
+    return scheduled.filter((item) =>
+      (item.channels || []).some((channelId) =>
+        server.channels.some((channel) => channel.id === channelId)
+      )
+    );
+  }, [scheduled, server]);
+
   const handleSenderNameChange = (e) => {
     const value = e.target.value;
     setSenderName(value);
@@ -130,12 +81,6 @@ export default forwardRef(function ComposePanel({
     setCurrentCompose(senderName, value);
   };
 
-  const handleSelectedChannelsChange = (channels) => {
-    setSelectedChannels(channels);
-    setComposeFields({ senderName, avatarUrl, message, selectedChannels: channels });
-  };
-
-  // Sync store changes to local state
   useEffect(() => {
     setSenderName(templateSenderName);
   }, [templateSenderName]);
@@ -153,6 +98,14 @@ export default forwardRef(function ComposePanel({
     setSelectedChannels(templateSelectedChannels);
   }, [templateSelectedChannels]);
 
+  useEffect(() => {
+    loadScheduled();
+  }, [loadScheduled]);
+
+  useEffect(() => {
+    fetchTemplates();
+  }, [fetchTemplates]);
+
   const toggleChannel = (channelId) => {
     setSelectedChannels((prev) => {
       const newChannels = prev.includes(channelId)
@@ -161,6 +114,17 @@ export default forwardRef(function ComposePanel({
       setComposeFields({ senderName, avatarUrl, message, selectedChannels: newChannels });
       return newChannels;
     });
+  };
+
+  const resetCompose = () => {
+    setMessage('');
+    setSelectedChannels([]);
+    if (embedActive) {
+      setEmbedTitle('');
+      setEmbedDescription('');
+      setEmbedImageUrl('');
+      setEmbedFooter('Crier - Free Discord Broadcast Tool');
+    }
   };
 
   const handleBroadcast = async () => {
@@ -187,6 +151,7 @@ export default forwardRef(function ComposePanel({
               },
             ];
           }
+
           const success = await fetch(channel.webhook, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
@@ -195,28 +160,22 @@ export default forwardRef(function ComposePanel({
 
           await addLog({
             channel: channel.name,
-            message: message,
+            message,
             status: success ? 'success' : 'failed',
           });
         } catch (error) {
           console.error('Error sending webhook:', error);
           await addLog({
             channel: channel.name,
-            message: message,
+            message,
             status: 'failed',
           });
         }
       }
     }
+
     setSending(false);
-    setMessage('');
-    setSelectedChannels([]);
-    if (embedActive) {
-      setEmbedTitle('');
-      setEmbedDescription('');
-      setEmbedImageUrl('');
-      setEmbedFooter('Crier — Free Discord Broadcast Tool');
-    }
+    resetCompose();
   };
 
   const handleBroadcastAll = async () => {
@@ -250,6 +209,7 @@ export default forwardRef(function ComposePanel({
                 },
               ];
             }
+
             const success = await fetch(channel.webhook, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
@@ -264,7 +224,7 @@ export default forwardRef(function ComposePanel({
 
             await addLog({
               channel: channel.name,
-              message: message,
+              message,
               status: success ? 'success' : 'failed',
             });
           } catch (error) {
@@ -272,7 +232,7 @@ export default forwardRef(function ComposePanel({
             failCount++;
             await addLog({
               channel: channel.name,
-              message: message,
+              message,
               status: 'failed',
             });
           }
@@ -282,25 +242,45 @@ export default forwardRef(function ComposePanel({
 
     setIsBroadcasting(false);
     setBroadcastProgress('');
-    setBroadcastResult(`✓ COMPLETE — ${sentCount} sent, ${failCount} failed`);
+    setBroadcastResult(`\u2713 COMPLETE - ${sentCount} sent, ${failCount} failed`);
     setTimeout(() => {
       setBroadcastResult('');
     }, 3000);
-    setMessage('');
-    setSelectedChannels([]);
-    if (embedActive) {
-      setEmbedTitle('');
-      setEmbedDescription('');
-      setEmbedImageUrl('');
-      setEmbedFooter('Crier — Free Discord Broadcast Tool');
+    resetCompose();
+  };
+
+  const handleConfirmSchedule = async ({ datetime, recurrence, message: modalMessage }) => {
+    if (!datetime || !(modalMessage || '').trim()) return;
+
+    if (editingItem) {
+      await updateScheduled(editingItem.id, {
+        message: modalMessage.trim(),
+        datetime: new Date(datetime).toISOString(),
+        recurrence: recurrence || null,
+      });
+      setEditingItem(null);
+      return;
     }
+
+    await addScheduled({
+      message: (modalMessage || message).trim(),
+      senderName,
+      avatarUrl,
+      channels: selectedChannels,
+      datetime,
+      recurrence: recurrence || null,
+    });
+  };
+
+  const handleEditScheduled = (item) => {
+    setEditingItem(item);
+    setIsScheduleModalOpen(true);
   };
 
   if (!server) return null;
 
   return (
     <div className="compose-panel" ref={ref}>
-      {/* Panel header with embed toggle */}
       <div className="compose-header-row">
         <h2>Compose Broadcast</h2>
         <button
@@ -312,145 +292,220 @@ export default forwardRef(function ComposePanel({
         </button>
       </div>
 
-      {/* Two-column grid layout */}
-      <div className="compose-grid">
-        {/* LEFT COLUMN: inputs */}
-        <div className="compose-left">
-          <div className="form-group">
-            <label>Sender Name</label>
-            <input
-              ref={senderInputRef}
-              type="text"
-              value={senderName}
-              onChange={handleSenderNameChange}
-              placeholder="Crier"
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Avatar URL (optional)</label>
-            <input
-              type="text"
-              value={avatarUrl}
-              onChange={handleAvatarUrlChange}
-              placeholder="https://..."
-            />
-          </div>
-
-          <div className="form-group">
-            <label>Message</label>
-            <textarea
-              ref={messageInputRef}
-              value={message}
-              onChange={handleMessageChange}
-              placeholder="This message was sent via Crier — your free Discord broadcast tool."
-              className="message-textarea"
-            />
-          </div>
-
-          {/* Embed fields (only when embed active) */}
-          {embedActive && (
-            <div className="embed-fields">
-              <div className="form-group">
-                <label>Embed Color</label>
-                <input
-                  type="color"
-                  value={embedColor}
-                  onChange={e => setEmbedColor(e.target.value)}
-                  style={{ width: 40, height: 28, border: 'none', background: 'none', marginLeft: 8 }}
-                />
-              </div>
-              <div className="form-group">
-                <label>Embed Title</label>
-                <input
-                  type="text"
-                  value={embedTitle}
-                  onChange={e => setEmbedTitle(e.target.value)}
-                  placeholder="Announcement Title"
-                />
-              </div>
-              <div className="form-group">
-                <label>Embed Description</label>
-                <textarea
-                  value={embedDescription}
-                  onChange={e => setEmbedDescription(e.target.value)}
-                  placeholder="Detailed description..."
-                />
-              </div>
-              <div className="form-group">
-                <label>Embed Image URL</label>
-                <input
-                  type="text"
-                  value={embedImageUrl}
-                  onChange={e => setEmbedImageUrl(e.target.value)}
-                  placeholder="https://image-url..."
-                />
-              </div>
-              <div className="form-group">
-                <label>Embed Footer</label>
-                <input
-                  type="text"
-                  value={embedFooter}
-                  onChange={e => setEmbedFooter(e.target.value)}
-                  placeholder="Crier — Free Discord Broadcast Tool"
-                />
-              </div>
+      <div className="compose-left">
+        <div className="compose-templates-section" style={{ marginBottom: '20px' }}>
+          <button
+            className="scheduled-toggle-btn"
+            type="button"
+            onClick={() => setIsTemplatesExpanded((v) => !v)}
+            style={{ width: '100%', marginBottom: isTemplatesExpanded ? '10px' : '0' }}
+          >
+            {isTemplatesExpanded ? '▼' : '▶'} ◈ TEMPLATES ({templates.length})
+          </button>
+          {isTemplatesExpanded && (
+            <div className="scheduled-list">
+              {templates.length === 0 ? (
+                <p className="scheduled-empty">No saved templates.</p>
+              ) : (
+                templates.map((tpl) => (
+                  <div key={tpl.id} className="scheduled-item">
+                    <div className="scheduled-info">
+                      <p className="scheduled-time">{tpl.name}</p>
+                      <p className="scheduled-preview">
+                        {(tpl.message || '').slice(0, 100)}
+                        {(tpl.message || '').length > 100 ? '...' : ''}
+                      </p>
+                    </div>
+                    <div className="scheduled-actions">
+                      <button
+                        className="scheduled-edit-btn"
+                        onClick={() => {
+                          loadTemplate(tpl);
+                          setIsTemplatesExpanded(false);
+                        }}
+                      >
+                        LOAD
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
             </div>
           )}
-
-          {/* Channel chips */}
-          <div className="channels-list" style={{ margin: '18px 0 12px' }}>
-            {server.channels.length === 0 ? (
-              <p className="no-channels-hint">No channels yet — add them in the ⚙️ Settings tab</p>
-            ) : (
-              server.channels.map((channel) => (
-                <button
-                  key={channel.id}
-                  className={`chip ${selectedChannels.includes(channel.id) ? 'active' : ''}`}
-                  onClick={() => toggleChannel(channel.id)}
-                >
-                  {channel.name}
-                </button>
-              ))
-            )}
-          </div>
-
-          {/* Broadcast button row */}
-          <div className="broadcast-btn-row">
-            <button
-              ref={broadcastBtnRef}
-              className="btn-broadcast-now"
-              onClick={handleBroadcast}
-              disabled={sending || selectedChannels.length === 0 || !message.trim()}
-            >
-              <Send size={16} /> {sending ? 'SENDING...' : '◈ BROADCAST NOW'}
-            </button>
-            <button
-              className="btn-schedule-quick"
-              onClick={() => setActiveTab?.('schedule')}
-              disabled={!message.trim()}
-            >
-              ⏰ SCHEDULE
-            </button>
-          </div>
         </div>
 
-        {/* RIGHT COLUMN: sticky Discord preview */}
-        <div className="compose-right">
-          <DiscordPreview
-            senderName={senderName}
-            avatarUrl={avatarUrl}
-            message={message}
-            embed={embedActive ? {
-              color: embedColor,
-              title: embedTitle,
-              description: embedDescription,
-              image: embedImageUrl,
-              footer: embedFooter,
-            } : null}
+        <div className="form-group">
+          <label>Sender Name</label>
+          <input
+            ref={senderInputRef}
+            type="text"
+            value={senderName}
+            onChange={handleSenderNameChange}
+            placeholder="Crier"
           />
         </div>
+
+        <div className="form-group">
+          <label>Avatar URL (optional)</label>
+          <input
+            type="text"
+            value={avatarUrl}
+            onChange={handleAvatarUrlChange}
+            placeholder="https://..."
+          />
+        </div>
+
+        <div className="form-group">
+          <label>Message</label>
+          <textarea
+            ref={messageInputRef}
+            value={message}
+            onChange={handleMessageChange}
+            placeholder="This message was sent via Crier - your free Discord broadcast tool."
+            className="message-textarea"
+          />
+        </div>
+
+        {embedActive && (
+          <div className="embed-fields">
+            <div className="form-group">
+              <label>Embed Color</label>
+              <input
+                type="color"
+                value={embedColor}
+                onChange={e => setEmbedColor(e.target.value)}
+                style={{ width: 40, height: 28, border: 'none', background: 'none', marginLeft: 8 }}
+              />
+            </div>
+            <div className="form-group">
+              <label>Embed Title</label>
+              <input
+                type="text"
+                value={embedTitle}
+                onChange={e => setEmbedTitle(e.target.value)}
+                placeholder="Announcement Title"
+              />
+            </div>
+            <div className="form-group">
+              <label>Embed Description</label>
+              <textarea
+                value={embedDescription}
+                onChange={e => setEmbedDescription(e.target.value)}
+                placeholder="Detailed description..."
+              />
+            </div>
+            <div className="form-group">
+              <label>Embed Image URL</label>
+              <input
+                type="text"
+                value={embedImageUrl}
+                onChange={e => setEmbedImageUrl(e.target.value)}
+                placeholder="https://image-url..."
+              />
+            </div>
+            <div className="form-group">
+              <label>Embed Footer</label>
+              <input
+                type="text"
+                value={embedFooter}
+                onChange={e => setEmbedFooter(e.target.value)}
+                placeholder="Crier - Free Discord Broadcast Tool"
+              />
+            </div>
+          </div>
+        )}
+
+        <div className="channels-list" style={{ margin: '18px 0 12px' }}>
+          {server.channels.length === 0 ? (
+            <p className="no-channels-hint">No channels yet - add them in the settings tab</p>
+          ) : (
+            server.channels.map((channel) => (
+              <button
+                key={channel.id}
+                className={`chip ${selectedChannels.includes(channel.id) ? 'active' : ''}`}
+                onClick={() => toggleChannel(channel.id)}
+              >
+                {channel.name}
+              </button>
+            ))
+          )}
+        </div>
+
+        <div className="broadcast-btn-row">
+          <button
+            ref={broadcastBtnRef}
+            className="btn-broadcast-now"
+            onClick={handleBroadcast}
+            disabled={sending || selectedChannels.length === 0 || !message.trim()}
+          >
+            ◈ BROADCAST NOW
+          </button>
+          <button
+            className="btn-schedule-quick"
+            onClick={() => {
+              setEditingItem(null);
+              setIsScheduleModalOpen(true);
+            }}
+            disabled={!message.trim() || selectedChannels.length === 0}
+          >
+            ⏰ SCHEDULE
+          </button>
+        </div>
+
+        {isBroadcasting && <p className="broadcast-status">Broadcasting... {broadcastProgress}</p>}
+        {broadcastResult && <p className="broadcast-status">{broadcastResult}</p>}
+
+        <div className="scheduled-section">
+          <button
+            type="button"
+            className="scheduled-toggle-btn"
+            onClick={() => setIsScheduledExpanded((prev) => !prev)}
+          >
+            {isScheduledExpanded ? '\u25bc' : '\u25b6'} SCHEDULED ({filteredScheduled.length})
+          </button>
+
+          {isScheduledExpanded && (
+            <div className="scheduled-list">
+              {filteredScheduled.length === 0 ? (
+                <p className="scheduled-empty">No scheduled broadcasts.</p>
+              ) : (
+                filteredScheduled.map((item) => (
+                  <div key={item.id} className="scheduled-item">
+                    <div className="scheduled-info">
+                      <p className="scheduled-time">{new Date(item.datetime).toLocaleString()}</p>
+                      <p className="scheduled-preview">
+                        {(item.message || '').slice(0, 100)}
+                        {(item.message || '').length > 100 ? '...' : ''}
+                      </p>
+                    </div>
+                    <div className="scheduled-actions">
+                      <button className="scheduled-edit-btn" onClick={() => handleEditScheduled(item)}>
+                        EDIT
+                      </button>
+                      <button className="scheduled-delete-btn" onClick={() => removeScheduled(item.id)}>
+                        DELETE
+                      </button>
+                    </div>
+                  </div>
+                ))
+              )}
+            </div>
+          )}
+        </div>
       </div>
+
+      <ScheduleModal
+        isOpen={isScheduleModalOpen}
+        onClose={() => {
+          setIsScheduleModalOpen(false);
+          setEditingItem(null);
+        }}
+        onConfirm={handleConfirmSchedule}
+        initialMessage={editingItem ? editingItem.message : message}
+        initialDatetime={editingItem ? editingItem.datetime : ''}
+        initialRecurrence={editingItem?.recurrence || null}
+        isEditing={Boolean(editingItem)}
+      />
     </div>
   );
 });

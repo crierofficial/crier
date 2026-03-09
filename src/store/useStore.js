@@ -259,9 +259,9 @@ export const useStore = create((set, get) => ({
         servers: state.servers.map((s) =>
           s.id === serverId
             ? {
-                ...s,
-                channels: [...s.channels, data[0]],
-              }
+              ...s,
+              channels: [...s.channels, data[0]],
+            }
             : s
         ),
       }))
@@ -283,9 +283,9 @@ export const useStore = create((set, get) => ({
         servers: state.servers.map((s) =>
           s.id === serverId
             ? {
-                ...s,
-                channels: s.channels.filter((c) => c.id !== channelId),
-              }
+              ...s,
+              channels: s.channels.filter((c) => c.id !== channelId),
+            }
             : s
         ),
       }))
@@ -307,11 +307,11 @@ export const useStore = create((set, get) => ({
         servers: state.servers.map((s) =>
           s.id === serverId
             ? {
-                ...s,
-                channels: s.channels.map((c) =>
-                  c.id === channelId ? { ...c, ...updates } : c
-                ),
-              }
+              ...s,
+              channels: s.channels.map((c) =>
+                c.id === channelId ? { ...c, ...updates } : c
+              ),
+            }
             : s
         ),
       }))
@@ -418,12 +418,6 @@ export const useStore = create((set, get) => ({
     if (!user) return
 
     try {
-      // Convert local datetime string to UTC ISO string
-      // datetime-local gives us YYYY-MM-DDTHH:mm in local time
-      // We need to convert this to UTC for storage
-      const localDate = new Date(scheduled.datetime)
-      const utcDatetime = new Date(localDate.getTime() - localDate.getTimezoneOffset() * 60000).toISOString()
-
       const { data, error } = await supabase
         .from('scheduled')
         .insert([
@@ -433,7 +427,7 @@ export const useStore = create((set, get) => ({
             sender_name: scheduled.senderName,
             avatar_url: scheduled.avatarUrl,
             channels: JSON.stringify(scheduled.channels),
-            datetime: utcDatetime,
+            datetime: scheduled.datetime,
             recurrence: scheduled.recurrence || null,
           },
         ])
@@ -491,6 +485,8 @@ export const useStore = create((set, get) => ({
   },
 
   setupScheduledCheck: () => {
+    const processedIds = new Set()
+
     const checkScheduled = async () => {
       const { user, scheduled, servers } = get()
       if (!user) return
@@ -498,97 +494,109 @@ export const useStore = create((set, get) => ({
       const now = new Date()
 
       for (const sched of scheduled) {
+        if (processedIds.has(sched.id)) continue
+
         const schedTime = new Date(sched.datetime)
         if (schedTime <= now && !sched.sent) {
-          // Send to all channels
-          for (const channelId of sched.channels) {
-            let channel = null
-            for (const server of servers) {
-              const found = server.channels.find((c) => c.id === channelId)
-              if (found) {
-                channel = found
-                break
+          processedIds.add(sched.id)
+
+          try {
+            // Send to all channels
+            for (const channelId of sched.channels) {
+              let channel = null
+              for (const server of servers) {
+                const found = server.channels.find((c) => c.id === channelId)
+                if (found) {
+                  channel = found
+                  break
+                }
+              }
+
+              if (channel && channel.webhook) {
+                try {
+                  const success = await fetch(channel.webhook, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                      username: sched.sender_name,
+                      content: sched.message,
+                      avatar_url: sched.avatar_url || undefined,
+                    }),
+                  }).then((res) => res.ok || res.status === 204)
+
+                  // Log the broadcast
+                  await get().addLog({
+                    channel: channel.name,
+                    status: success ? 'success' : 'failed',
+                  })
+                } catch (error) {
+                  console.error('Error sending webhook:', error)
+                  await get().addLog({
+                    channel: channel.name,
+                    status: 'failed',
+                  })
+                }
               }
             }
 
-            if (channel && channel.webhook) {
-              try {
-                const success = await fetch(channel.webhook, {
-                  method: 'POST',
-                  headers: { 'Content-Type': 'application/json' },
-                  body: JSON.stringify({
-                    username: sched.sender_name,
-                    content: sched.message,
-                    avatar_url: sched.avatar_url || undefined,
-                  }),
-                }).then((res) => res.ok || res.status === 204)
+            // Handle recurrence or delete
+            if (sched.recurrence) {
+              // Calculate next occurrence
+              let nextDateTime = new Date(sched.datetime)
 
-                // Log the broadcast
-                await get().addLog({
-                  channel: channel.name,
-                  status: success ? 'success' : 'failed',
-                })
-              } catch (error) {
-                console.error('Error sending webhook:', error)
-                await get().addLog({
-                  channel: channel.name,
-                  status: 'failed',
-                })
-              }
-            }
-          }
-
-          // Handle recurrence or mark as sent
-          if (sched.recurrence) {
-            // Calculate next occurrence
-            let nextDateTime = new Date(sched.datetime)
-            
-            switch (sched.recurrence) {
-              case 'every-hour':
-                nextDateTime.setHours(nextDateTime.getHours() + 1)
-                break
-              case 'every-day':
-                nextDateTime.setDate(nextDateTime.getDate() + 1)
-                break
-              case 'every-week':
-                nextDateTime.setDate(nextDateTime.getDate() + 7)
-                break
-              case 'every-monday':
-                do {
+              switch (sched.recurrence) {
+                case 'every-hour':
+                  nextDateTime.setHours(nextDateTime.getHours() + 1)
+                  break
+                case 'every-day':
                   nextDateTime.setDate(nextDateTime.getDate() + 1)
-                } while (nextDateTime.getDay() !== 1)
-                break
-              case 'every-sunday':
-                do {
-                  nextDateTime.setDate(nextDateTime.getDate() + 1)
-                } while (nextDateTime.getDay() !== 0)
-                break
-              default:
-                // If unknown recurrence, treat as one-time
-                nextDateTime = null
-            }
+                  break
+                case 'every-week':
+                  nextDateTime.setDate(nextDateTime.getDate() + 7)
+                  break
+                case 'every-monday':
+                  do {
+                    nextDateTime.setDate(nextDateTime.getDate() + 1)
+                  } while (nextDateTime.getDay() !== 1)
+                  break
+                case 'every-sunday':
+                  do {
+                    nextDateTime.setDate(nextDateTime.getDate() + 1)
+                  } while (nextDateTime.getDay() !== 0)
+                  break
+                default:
+                  // If unknown recurrence, treat as one-time
+                  nextDateTime = null
+              }
 
-            // Update with next occurrence instead of marking sent
-            if (nextDateTime) {
+              // Update with next occurrence instead of marking sent
+              if (nextDateTime) {
+                try {
+                  await get().updateScheduled(sched.id, {
+                    datetime: nextDateTime.toISOString(),
+                    sent: false,
+                  })
+                } catch (error) {
+                  console.error('Error rescheduling recurring item:', error)
+                }
+              }
+            } else {
+              // One-time scheduled - delete immediately
               try {
-                await get().updateScheduled(sched.id, {
-                  datetime: nextDateTime.toISOString(),
-                  sent: false,
-                })
+                await supabase
+                  .from('scheduled')
+                  .delete()
+                  .eq('id', sched.id)
+
+                set((state) => ({
+                  scheduled: state.scheduled.filter((s) => s.id !== sched.id)
+                }))
               } catch (error) {
-                console.error('Error rescheduling recurring item:', error)
+                console.error('Error deleting scheduled item:', error)
               }
             }
-          } else {
-            // One-time scheduled - mark as sent
-            try {
-              await supabase
-                .from('scheduled')
-                .update({ sent: true })
-                .eq('id', sched.id)
-            } catch (error) {
-              console.error('Error marking scheduled as sent:', error)
-            }
+          } finally {
+            processedIds.delete(sched.id)
           }
         }
       }

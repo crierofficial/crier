@@ -6,12 +6,12 @@ import '../styles/SchedulePanel.css';
 export default function SchedulePanel({ serverId }) {
   const {
     servers, scheduled, addScheduled, removeScheduled, loadScheduled,
-    templateSenderName, templateAvatarUrl, templateMessage,
+    templateSenderName, templateAvatarUrl, templateMessage, templateSelectedChannels
   } = useStore();
   const [message, setMessage] = useState(templateMessage || '');
   const [senderName, setSenderName] = useState(templateSenderName || 'SMP Administration');
   const [avatarUrl, setAvatarUrl] = useState(templateAvatarUrl || '');
-  const [selectedChannels, setSelectedChannels] = useState([]);
+  const [selectedChannels, setSelectedChannels] = useState(templateSelectedChannels || []);
   const [datetime, setDatetime] = useState('');
   const [isRecurring, setIsRecurring] = useState(false);
   const [recurrenceInterval, setRecurrenceInterval] = useState('every-day');
