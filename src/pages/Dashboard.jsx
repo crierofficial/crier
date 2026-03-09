@@ -1,54 +1,111 @@
+import { useRef, useState } from 'react'
 import { useStore } from '../store/useStore';
 import Sidebar from '../components/Sidebar';
 import ComposePanel from '../components/ComposePanel';
+import TemplatesPanel from '../components/TemplatesPanel';
 import ChannelManager from '../components/ChannelManager';
 import SchedulePanel from '../components/SchedulePanel';
 import TransmissionLog from '../components/TransmissionLog';
-import { Settings } from 'lucide-react';
+import AnalyticsPanel from '../components/AnalyticsPanel';
+import { useKeyboardShortcuts, KeyboardShortcutsHelp } from '../hooks/useKeyboardShortcuts.jsx'
 import '../styles/Dashboard.css';
 
-export default function Dashboard() {
+export default function Dashboard({ user }) {
   const { selectedServerId } = useStore();
+  const composePanelRef = useRef(null);
+  const templatesPanelRef = useRef(null);
+  const senderInputRef = useRef(null);
+  const messageInputRef = useRef(null);
+  const broadcastBtnRef = useRef(null);
+
+  // Tab & page state
+  const [activeTab, setActiveTab] = useState('compose');
+  const [activePage, setActivePage] = useState('dashboard');
+
+  const { showHelp, setShowHelp } = useKeyboardShortcuts({
+    onBroadcast: () => broadcastBtnRef.current?.click(),
+    onClear: () => {
+      if (senderInputRef.current) {
+        senderInputRef.current.value = '';
+        senderInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+      if (messageInputRef.current) {
+        messageInputRef.current.value = '';
+        messageInputRef.current.dispatchEvent(new Event('input', { bubbles: true }));
+      }
+    },
+    onFocusSender: () => senderInputRef.current?.focus(),
+    onFocusMessage: () => messageInputRef.current?.focus(),
+    onFocusTemplates: () => setActiveTab('templates'),
+  });
+
+  const renderMainContent = () => {
+    // Full-page views (no server tabs)
+    if (activePage === 'analytics') {
+      return (
+        <div className="fullpage-panel">
+          <AnalyticsPanel />
+        </div>
+      );
+    }
+    if (activePage === 'logs') {
+      return (
+        <div className="fullpage-panel">
+          <TransmissionLog />
+        </div>
+      );
+    }
+
+    // Server dashboard
+    if (!selectedServerId) {
+      return (
+        <div className="empty-state">
+          <h2>No server selected</h2>
+          <p>Add a server from the sidebar to get started</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="tab-content">
+        {activeTab === 'compose' && (
+          <ComposePanel
+            ref={composePanelRef}
+            serverId={selectedServerId}
+            senderInputRef={senderInputRef}
+            messageInputRef={messageInputRef}
+            broadcastBtnRef={broadcastBtnRef}
+            setActiveTab={setActiveTab}
+          />
+        )}
+        {activeTab === 'schedule' && (
+          <SchedulePanel serverId={selectedServerId} />
+        )}
+        {activeTab === 'templates' && (
+          <TemplatesPanel ref={templatesPanelRef} />
+        )}
+        {activeTab === 'settings' && (
+          <ChannelManager serverId={selectedServerId} />
+        )}
+      </div>
+    );
+  };
 
   return (
     <div className="dashboard">
-      <div className="dashboard-header">
-        <h1 className="dashboard-logo">📢 Crier</h1>
-        <button className="btn-settings">
-          <Settings size={20} />
-        </button>
-      </div>
+      <Sidebar
+        user={user}
+        activeTab={activeTab}
+        setActiveTab={setActiveTab}
+        activePage={activePage}
+        setActivePage={setActivePage}
+      />
 
-      <div className="dashboard-content">
-        <Sidebar />
+      <main className="dashboard-main">
+        {renderMainContent()}
+      </main>
 
-        <main className="dashboard-main">
-          {!selectedServerId ? (
-            <div className="empty-state">
-              <h2>No server selected</h2>
-              <p>Add a server from the sidebar to get started</p>
-            </div>
-          ) : (
-            <>
-              <div className="compose-section">
-                <ComposePanel serverId={selectedServerId} />
-              </div>
-
-              <div className="manager-section">
-                <ChannelManager serverId={selectedServerId} />
-              </div>
-
-              <div className="schedule-section">
-                <SchedulePanel serverId={selectedServerId} />
-              </div>
-
-              <div className="log-section">
-                <TransmissionLog />
-              </div>
-            </>
-          )}
-        </main>
-      </div>
+      <KeyboardShortcutsHelp isOpen={showHelp} onClose={() => setShowHelp(false)} />
     </div>
   );
 }

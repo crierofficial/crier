@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
 import { X } from 'lucide-react';
 import '../styles/AddServerModal.css';
@@ -6,18 +6,28 @@ import '../styles/AddServerModal.css';
 export default function AddServerModal({ isOpen, onClose }) {
   const [name, setName] = useState('');
   const [icon, setIcon] = useState('');
-  const { addServer, setSelectedServer } = useStore();
+  const { addServer } = useStore();
 
-  const handleSubmit = (e) => {
+  // BUG 5 fix: Lock/unlock body scroll when modal opens/closes
+  useEffect(() => {
+    if (isOpen) {
+      document.body.style.overflow = 'hidden';
+    } else {
+      document.body.style.overflow = '';
+    }
+    return () => {
+      document.body.style.overflow = '';
+    };
+  }, [isOpen]);
+
+  const handleSubmit = async (e) => {
     e.preventDefault();
     if (!name.trim()) return;
 
-    const serverId = Date.now().toString();
-    addServer({
+    await addServer({
       name: name.trim(),
       icon: icon.trim() || null,
     });
-    setSelectedServer(serverId);
     setName('');
     setIcon('');
     onClose();
@@ -54,8 +64,8 @@ export default function AddServerModal({ isOpen, onClose }) {
               placeholder="https://..."
             />
           </div>
-          <button type="submit" className="btn btn-primary">
-            Add Server
+          <button type="submit" className="btn-create-server">
+            ◈ CREATE SERVER
           </button>
         </form>
       </div>

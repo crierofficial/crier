@@ -1,0 +1,81 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 200 200" width="200" height="200">
+  <defs>
+    <radialGradient id="bgGlow" cx="50%" cy="50%" r="50%">
+      <stop offset="0%" stop-color="#c8a55a" stop-opacity="0.08"/>
+      <stop offset="100%" stop-color="#060809" stop-opacity="0"/>
+    </radialGradient>
+    <linearGradient id="goldGrad" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#e8c070"/>
+      <stop offset="100%" stop-color="#c8a55a"/>
+    </linearGradient>
+    <linearGradient id="cyanGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#00d4ff"/>
+      <stop offset="100%" stop-color="#0099cc"/>
+    </linearGradient>
+    <filter id="goldGlow">
+      <feGaussianBlur stdDeviation="2.5" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <filter id="cyanGlow">
+      <feGaussianBlur stdDeviation="3" result="blur"/>
+      <feMerge><feMergeNode in="blur"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+  </defs>
+
+  <!-- Background circle (subtle) -->
+  <circle cx="100" cy="100" r="90" fill="url(#bgGlow)"/>
+
+  <!-- Outer hex ring (angular, military feel) -->
+  <polygon points="100,14 170,55 170,145 100,186 30,145 30,55"
+    fill="none" stroke="#c8a55a" stroke-width="1.2" stroke-opacity="0.25"/>
+
+  <!-- Inner hex ring -->
+  <polygon points="100,30 155,62 155,138 100,170 45,138 45,62"
+    fill="none" stroke="#c8a55a" stroke-width="0.6" stroke-opacity="0.12"/>
+
+  <!-- The C shape - thick arc, open on right -->
+  <path d="M 148,58
+           A 62,62 0 1,0 148,142"
+    fill="none"
+    stroke="url(#goldGrad)"
+    stroke-width="14"
+    stroke-linecap="square"
+    filter="url(#goldGlow)"/>
+
+  <!-- C top angular end cap -->
+  <polygon points="140,45 156,45 156,62 148,58 140,58"
+    fill="url(#goldGrad)" opacity="0.9"/>
+
+  <!-- C bottom angular end cap -->
+  <polygon points="140,142 148,142 156,138 156,155 140,155"
+    fill="url(#goldGrad)" opacity="0.9"/>
+
+  <!-- Waveform lines coming out of the C opening (right side) -->
+  <!-- Wave line 1 - closest, short -->
+  <path d="M 155,88 Q 163,94 155,100 Q 147,106 155,112"
+    fill="none" stroke="url(#cyanGrad)" stroke-width="3.5"
+    stroke-linecap="round" filter="url(#cyanGlow)" opacity="0.95"/>
+
+  <!-- Wave line 2 - medium -->
+  <path d="M 163,80 Q 176,90 163,100 Q 150,110 163,120"
+    fill="none" stroke="url(#cyanGrad)" stroke-width="2.8"
+    stroke-linecap="round" filter="url(#cyanGlow)" opacity="0.75"/>
+
+  <!-- Wave line 3 - far, faint -->
+  <path d="M 171,72 Q 188,86 171,100 Q 154,114 171,128"
+    fill="none" stroke="url(#cyanGrad)" stroke-width="2"
+    stroke-linecap="round" filter="url(#cyanGlow)" opacity="0.45"/>
+
+  <!-- Center dot at C opening midpoint -->
+  <circle cx="152" cy="100" r="4" fill="#00d4ff" opacity="0.9" filter="url(#cyanGlow)"/>
+
+  <!-- Corner tick marks (military HUD feel) -->
+  <line x1="18" y1="18" x2="34" y2="18" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+  <line x1="18" y1="18" x2="18" y2="34" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+  <line x1="182" y1="18" x2="166" y2="18" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+  <line x1="182" y1="18" x2="182" y2="34" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+  <line x1="18" y1="182" x2="34" y2="182" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+  <line x1="18" y1="182" x2="18" y2="166" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+  <line x1="182" y1="182" x2="166" y2="182" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+  <line x1="182" y1="182" x2="182" y2="166" stroke="#c8a55a" stroke-width="1.5" opacity="0.5"/>
+</svg>

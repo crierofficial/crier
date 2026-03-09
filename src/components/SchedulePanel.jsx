@@ -1,69 +1,37 @@
 import { useState, useEffect } from 'react';
 import { useStore } from '../store/useStore';
-import { sendToWebhook } from '../utils/webhooks';
 import { Trash2, Clock } from 'lucide-react';
 import '../styles/SchedulePanel.css';
 
 export default function SchedulePanel({ serverId }) {
-  const { servers, scheduled, addScheduled, removeScheduled, addLog } =
-    useStore();
-  const [message, setMessage] = useState('');
-  const [senderName, setSenderName] = useState('SMP Administration');
-  const [avatarUrl, setAvatarUrl] = useState('');
+  const {
+    servers, scheduled, addScheduled, removeScheduled, loadScheduled,
+    templateSenderName, templateAvatarUrl, templateMessage,
+  } = useStore();
+  const [message, setMessage] = useState(templateMessage || '');
+  const [senderName, setSenderName] = useState(templateSenderName || 'SMP Administration');
+  const [avatarUrl, setAvatarUrl] = useState(templateAvatarUrl || '');
   const [selectedChannels, setSelectedChannels] = useState([]);
   const [datetime, setDatetime] = useState('');
+  const [isRecurring, setIsRecurring] = useState(false);
+  const [recurrenceInterval, setRecurrenceInterval] = useState('every-day');
 
   const server = servers.find((s) => s.id === serverId);
 
-  // Check every minute if scheduled messages should be sent
   useEffect(() => {
-    const checkScheduled = async () => {
-      const now = new Date();
+    loadScheduled();
+  }, [loadScheduled]);
 
-      for (const sched of scheduled) {
-        if (sched.channels.length === 0) continue;
-
-        const schedTime = new Date(sched.datetime);
-        if (schedTime <= now && !sched.sent) {
-          // Send to all channels
-          const server = servers.find((s) =>
-            s.channels.some((c) => sched.channels.includes(c.id))
-          );
-
-          if (server) {
-            for (const channelId of sched.channels) {
-              const channel = server.channels.find((c) => c.id === channelId);
-              if (channel && channel.webhook) {
-                const success = await sendToWebhook(
-                  channel.webhook,
-                  sched.message,
-                  sched.senderName,
-                  sched.avatarUrl
-                );
-                addLog({
-                  channel: channel.name,
-                  status: success ? 'success' : 'failed',
-                });
-              }
-            }
-          }
-        }
-      }
-    };
-
-    const interval = setInterval(checkScheduled, 60000); // Check every minute
-    return () => clearInterval(interval);
-  }, [scheduled, servers, addLog]);
-
-  const handleSchedule = () => {
+  const handleSchedule = async () => {
     if (!message.trim() || selectedChannels.length === 0 || !datetime) return;
 
-    addScheduled({
+    await addScheduled({
       message: message.trim(),
       senderName,
       avatarUrl,
       channels: selectedChannels,
       datetime,
+      recurrence: isRecurring ? recurrenceInterval : null,
     });
 
     setMessage('');
@@ -71,6 +39,12 @@ export default function SchedulePanel({ serverId }) {
     setAvatarUrl('');
     setSelectedChannels([]);
     setDatetime('');
+    setIsRecurring(false);
+    setRecurrenceInterval('every-day');
+  };
+
+  const handleDelete = async (scheduledId) => {
+    await removeScheduled(scheduledId);
   };
 
   const toggleChannel = (channelId) => {
@@ -128,18 +102,50 @@ export default function SchedulePanel({ serverId }) {
           type="datetime-local"
           value={datetime}
           onChange={(e) => setDatetime(e.target.value)}
+          className="datetime-input"
         />
       </div>
 
       <div className="form-group">
+        <label>
+          <input
+            type="checkbox"
+            checked={isRecurring}
+            onChange={(e) => setIsRecurring(e.target.checked)}
+          />
+          {' '}RECURRING
+        </label>
+      </div>
+
+      {isRecurring && (
+        <div className="form-group">
+          <label>Repeat Interval</label>
+          <div className="recurrence-options">
+            {[
+              { value: 'every-hour', label: 'Every Hour' },
+              { value: 'every-day', label: 'Every Day' },
+              { value: 'every-week', label: 'Every Week' },
+              { value: 'every-monday', label: 'Every Monday' },
+              { value: 'every-sunday', label: 'Every Sunday' },
+            ].map((opt) => (
+              <button
+                key={opt.value}
+                className={`recurrence-btn ${recurrenceInterval === opt.value ? 'active' : ''}`}
+                onClick={() => setRecurrenceInterval(opt.value)}
+              >
+                {opt.label}
+              </button>
+            ))}
+          </div>
+        </div>
+      )}      <div className="form-group">
         <label>Select Channels</label>
         <div className="channel-chips">
           {server.channels.map((channel) => (
             <button
               key={channel.id}
-              className={`chip ${
-                selectedChannels.includes(channel.id) ? 'active' : ''
-              }`}
+              className={`chip ${selectedChannels.includes(channel.id) ? 'active' : ''
+                }`}
               onClick={() => toggleChannel(channel.id)}
             >
               {channel.name}
@@ -168,7 +174,7 @@ export default function SchedulePanel({ serverId }) {
               </div>
               <button
                 className="btn btn-danger btn-sm"
-                onClick={() => removeScheduled(sched.id)}
+                onClick={() => handleDelete(sched.id)}
               >
                 <Trash2 size={16} />
               </button>
